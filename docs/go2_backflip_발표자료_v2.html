@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GO2 BACKFLIP — 커리큘럼 & 보상 설계</title>
+<style>
+  :root {
+    --paper: #eef0f2;
+    --panel: #ffffff;
+    --ink: #16202a;
+    --ink-soft: #5c6b78;
+    --line: #ccd3d9;
+    --orange: #e8541e;
+    --steel: #33608d;
+    --mono: "JetBrains Mono", "D2Coding", ui-monospace, monospace;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: "Pretendard", "Noto Sans KR", -apple-system, "Segoe UI", sans-serif;
+    line-height: 1.6;
+    overflow: hidden;
+  }
+  .deck { height: 100vh; position: relative; }
+  .slide { position: absolute; inset: 0; display: none; flex-direction: column; justify-content: center; padding: 4vh 6vw; overflow-y: auto; }
+  .slide.active { display: flex; }
+  .inner { max-width: 1060px; margin: 0 auto; width: 100%; }
+
+  .eyebrow {
+    font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.22em;
+    color: var(--orange); font-weight: 700; margin-bottom: 1rem;
+  }
+  .eyebrow::before { content: "// "; color: var(--line); }
+  h1 { font-size: clamp(2.2rem, 5.5vw, 4rem); font-weight: 900; letter-spacing: -0.03em; line-height: 1.08; text-wrap: balance; }
+  h1 .stroke { color: transparent; -webkit-text-stroke: 2px var(--ink); }
+  h2 { font-size: clamp(1.5rem, 3.2vw, 2.2rem); font-weight: 850; letter-spacing: -0.02em; margin-bottom: 1.3rem; text-wrap: balance; }
+  h3 { font-size: 0.95rem; font-weight: 800; margin-bottom: 0.4rem; }
+  .lede { color: var(--ink-soft); font-size: 1.02rem; max-width: 44em; }
+  .orange { color: var(--orange); }
+  .steel { color: var(--steel); }
+  code, .mono { font-family: var(--mono); font-size: 0.87em; }
+
+  /* hero flight strobe */
+  .flight { position: relative; height: 220px; margin: 2.4rem 0 0.6rem; border-bottom: 2px solid var(--ink); }
+  .flight .ruler { position: absolute; bottom: -22px; width: 100%; display: flex; font-family: var(--mono); font-size: 0.66rem; color: var(--ink-soft); }
+  .flight .ruler span { flex: 1; border-left: 1px solid var(--line); padding-left: 4px; }
+  .bot {
+    position: absolute; width: 46px; height: 20px; border-radius: 5px;
+    background: var(--ink); bottom: 0;
+  }
+  .bot::after { content: ""; position: absolute; right: -3px; top: 4px; width: 9px; height: 9px; border-radius: 50%; background: var(--orange); }
+  .bot .deg { position: absolute; top: -1.5em; left: 50%; transform: translateX(-50%); font-family: var(--mono); font-size: 0.62rem; color: var(--steel); font-weight: 700; }
+  .b1 { left: 4%;  bottom: 6px;  transform: rotate(0deg); opacity: 0.35; }
+  .b2 { left: 20%; bottom: 90px; transform: rotate(-72deg); opacity: 0.55; }
+  .b3 { left: 38%; bottom: 160px; transform: rotate(-180deg); opacity: 0.75; }
+  .b4 { left: 57%; bottom: 96px; transform: rotate(-288deg); opacity: 0.9; }
+  .b5 { left: 75%; bottom: 6px;  transform: rotate(-360deg); }
+  .arc {
+    position: absolute; left: 5%; right: 18%; top: 12px; height: 190px;
+    border: 2px dashed var(--orange); border-bottom: none;
+    border-radius: 50% 50% 0 0 / 100% 100% 0 0; opacity: 0.5;
+  }
+
+  .stat-row { display: flex; gap: 0; margin-top: 2.6rem; border: 2px solid var(--ink); flex-wrap: wrap; }
+  .stat { flex: 1; min-width: 140px; padding: 0.85rem 1.1rem; border-right: 2px solid var(--ink); background: var(--panel); }
+  .stat:last-child { border-right: none; }
+  .stat .num { font-family: var(--mono); font-size: 1.55rem; font-weight: 800; color: var(--orange); font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
+  .stat .lbl { font-size: 0.74rem; color: var(--ink-soft); font-weight: 600; }
+
+  table { border-collapse: collapse; width: 100%; font-size: 0.85rem; background: var(--panel); }
+  th, td { text-align: left; padding: 0.44rem 0.75rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { font-size: 0.7rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-soft); border-bottom: 2px solid var(--ink); }
+  td.mono, th.mono { font-family: var(--mono); font-size: 0.79rem; white-space: nowrap; }
+  .tblwrap { overflow-x: auto; border: 2px solid var(--ink); }
+  tr.grp td { font-family: var(--mono); font-size: 0.68rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--panel); background: var(--ink); font-weight: 700; }
+
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; }
+  .grid5 { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.8rem; }
+  @media (max-width: 880px) { .grid2, .grid5 { grid-template-columns: 1fr; } }
+
+  .card { background: var(--panel); border: 2px solid var(--ink); padding: 1rem 1.05rem; }
+  .card.flat { border: 1px solid var(--line); }
+  .card p { font-size: 0.84rem; color: var(--ink-soft); }
+  .card .no { font-family: var(--mono); font-size: 0.68rem; font-weight: 800; color: var(--orange); letter-spacing: 0.15em; }
+  .card .res { font-family: var(--mono); font-size: 0.78rem; margin-top: 0.55rem; padding-top: 0.5rem; border-top: 1px dashed var(--line); font-variant-numeric: tabular-nums; }
+
+  pre.tree { font-family: var(--mono); font-size: 0.78rem; line-height: 1.75; background: var(--panel); border: 2px solid var(--ink); padding: 1rem 1.2rem; overflow-x: auto; }
+  pre.tree .c { color: var(--ink-soft); }
+  pre.tree .hl { color: var(--orange); font-weight: 700; }
+
+  .tl { display: flex; height: 54px; border: 2px solid var(--ink); margin-top: 1.6rem; }
+  .tl div { display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.8rem; border-right: 2px solid var(--ink); }
+  .tl div:last-child { border-right: none; }
+  .tl .p1 { flex: 25; background: var(--panel); }
+  .tl .p2 { flex: 12.5; background: var(--orange); color: #fff; }
+  .tl .p3 { flex: 12.5; background: var(--steel); color: #fff; }
+  .tl .p4 { flex: 50; background: #dde3e8; }
+  .tlr { display: flex; font-family: var(--mono); font-size: 0.7rem; color: var(--ink-soft); margin-top: 0.3rem; }
+  .tlr span { flex: 1; }
+
+  .arch { display: flex; gap: 0; margin-top: 1.4rem; flex-wrap: wrap; align-items: stretch; }
+  .arch .box { flex: 1; min-width: 190px; background: var(--panel); border: 2px solid var(--ink); padding: 0.9rem 1rem; }
+  .arch .hz { font-family: var(--mono); font-size: 0.7rem; font-weight: 800; color: var(--steel); }
+  .arch .box p { font-size: 0.78rem; color: var(--ink-soft); }
+  .arch .arr { display: flex; align-items: center; padding: 0 0.6rem; font-family: var(--mono); font-weight: 800; color: var(--orange); }
+
+  ul.t { list-style: none; }
+  ul.t li { padding-left: 1.2em; position: relative; margin-bottom: 0.55rem; font-size: 0.92rem; }
+  ul.t li::before { content: "→"; position: absolute; left: 0; color: var(--orange); font-weight: 800; }
+  ul.t li .sub { color: var(--ink-soft); font-size: 0.86em; }
+
+  .formula { font-family: var(--mono); background: var(--ink); color: #e8edf2; padding: 0.7rem 1rem; font-size: 0.88rem; margin: 0.9rem 0; overflow-x: auto; white-space: nowrap; }
+  .formula b { color: var(--orange); font-weight: 700; }
+
+  /* versus (tradeoff) */
+  .vs { display: flex; gap: 1rem; margin-top: 1.2rem; flex-wrap: wrap; }
+  .vs .side { flex: 1; min-width: 240px; background: var(--panel); border: 2px solid var(--ink); padding: 1rem 1.1rem; }
+  .vs .side.win { border-color: var(--orange); box-shadow: 4px 4px 0 var(--orange); }
+  .vs .side h3 { font-family: var(--mono); font-size: 0.78rem; letter-spacing: 0.1em; }
+  .vs .side .big { font-family: var(--mono); font-size: 1.3rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+
+  .nav { position: fixed; bottom: 1.1rem; right: 1.4rem; display: flex; gap: 0.5rem; align-items: center; font-family: var(--mono); font-size: 0.78rem; color: var(--ink-soft); z-index: 10; }
+  .nav button { background: var(--panel); color: var(--ink); border: 2px solid var(--ink); width: 36px; height: 32px; cursor: pointer; font-weight: 800; }
+  .nav button:hover, .nav button:focus-visible { background: var(--orange); color: #fff; border-color: var(--orange); outline: none; }
+  .progress { position: fixed; top: 0; left: 0; height: 3px; background: var(--orange); transition: width 0.25s; z-index: 10; }
+  @media (prefers-reduced-motion: reduce) { .progress { transition: none; } }
+  .tag { position: fixed; bottom: 1.25rem; left: 1.5rem; font-family: var(--mono); font-size: 0.68rem; letter-spacing: 0.18em; color: var(--ink-soft); font-weight: 700; }
+</style>
+</head>
+<body>
+<div class="progress" id="progress"></div>
+<div class="deck">
+
+  <!-- 1 HERO -->
+  <section class="slide active">
+    <div class="inner">
+      <div class="eyebrow">FLIGHT TEST RECORD · ISAAC SIM 4.5 · RTX 3060</div>
+      <h1>GO2 <span class="stroke">BACKFLIP</span><br>커리큘럼 &amp; 보상함수 설계</h1>
+      <div class="flight" aria-label="백플립 비행 궤적 스트로보 다이어그램">
+        <div class="arc"></div>
+        <div class="bot b1"><span class="deg">0°</span></div>
+        <div class="bot b2"><span class="deg">72°</span></div>
+        <div class="bot b3"><span class="deg">180°</span></div>
+        <div class="bot b4"><span class="deg">288°</span></div>
+        <div class="bot b5"><span class="deg">360°</span></div>
+        <div class="ruler"><span>0.0s</span><span>0.5s</span><span>0.75s</span><span>1.0s</span><span>2.0s</span></div>
+      </div>
+      <div class="stat-row">
+        <div class="stat"><div class="num">360°</div><div class="lbl">실측 회전 (오차 0.1%)</div></div>
+        <div class="stat"><div class="num">2.1×</div><div class="lbl">착지 충격 (체중 대비)</div></div>
+        <div class="stat"><div class="num">8,192</div><div class="lbl">병렬 환경</div></div>
+        <div class="stat"><div class="num">5</div><div class="lbl">커리큘럼 스테이지</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2 시스템 -->
+  <section class="slide">
+    <div class="inner">
+      <div class="eyebrow">01 · SYSTEM</div>
+      <h2>구성 — IsaacLab 외부 확장, 본체 무수정</h2>
+      <div class="grid2">
+        <ul class="t">
+          <li><b>Isaac Sim 4.5 + IsaacLab 2.3</b> <span class="sub">— PhysX GPU 물리, direct workflow</span></li>
+          <li><b>rsl_rl PPO</b> <span class="sub">— 111k steps/s, 체크포인트에 옵티마이저 상태 포함</span></li>
+          <li><b>실시간 보상 튜닝</b> <span class="sub">— JSON 파일 편집 → 다음 에피소드에 즉시 반영</span></li>
+          <li><b>프레임 실측 도구</b> <span class="sub">— 50Hz로 높이·각속도·접촉력·토크 기록, 설계 검증에 사용</span></li>
+          <li><b>CMDP 하드 제약</b> <span class="sub">— 충격 한계 초과 시 에피소드 종료 (실기 배포용 대기)</span></li>
+        </ul>
+        <pre class="tree">go2_backflip/
+├── …/tasks/direct/go2_backflip/
+│   ├── <span class="hl">go2_backflip_env.py</span>      <span class="c"># 보상 16항·관측·지연</span>
+│   ├── <span class="hl">go2_backflip_env_cfg.py</span>  <span class="c"># Stage 1~6 설정</span>
+│   └── agents/rsl_rl_ppo_cfg.py <span class="c"># PPO 설정</span>
+├── scripts/rsl_rl/
+│   ├── train.py · play.py       <span class="c"># 학습 · 영상</span>
+│   └── <span class="hl">capture.py</span>               <span class="c"># 프레임 실측</span>
+└── reward_overrides.json        <span class="c"># 라이브 튜닝</span></pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3 제어 -->
+  <section class="slide">
+    <div class="inner">
+      <div class="eyebrow">02 · CONTROL</div>
+      <h2>제어 계층 — 느린 지능, 빠른 반사</h2>
+      <div class="arch">
+        <div class="box"><div class="hz">50 Hz</div><h3>RL 정책 · MLP 512-256-128</h3><p>관측 43차원(IMU+엔코더+phase만) → 관절 목표각 12차원. 실기에서 100% 재현 가능한 정보만 사용.</p></div>
+        <div class="arr">q*</div>
+        <div class="box"><div class="hz">200 Hz</div><h3>PD + DC모터 모델</h3><p>τ = 25(q*−q) − 0.5q̇. 속도-토크 곡선이 23.5 N·m에서 물리적으로 포화 — 시뮬만의 괴력 차단.</p></div>
+        <div class="arr">τ</div>
+        <div class="box"><div class="hz">200 Hz</div><h3>PhysX</h3><p>dt 5ms · decimation 4 · 8,192 env 병렬.</p></div>
+      </div>
+      <div class="grid2" style="margin-top:1.4rem">
+        <div class="card flat"><h3>Actor 관측 <span class="mono steel">43D · 노이즈 O</span></h3><p>각속도·중력벡터·관절각/속도·이전행동·<b class="orange">phase</b>. 선속도 제외(실기 측정 불가).</p></div>
+        <div class="card flat"><h3>Critic 관측 <span class="mono steel">51D · 특권 · 무노이즈</span></h3><p>+ 선속도, 발 접촉 4, 몸통 높이. 시뮬 전용이므로 완전 상태로 가치 평가 (asymmetric actor-critic).</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4 MDP -->
+  <section class="slide">
+    <div class="inner">
+      <div class="eyebrow">03 · MDP</div>
+      <h2>MDP 정식화 — phase가 Markov성을 지킨다</h2>
+      <div class="formula">MDP = (S, A, P, <b>R</b>, γ) · γ=0.99 · GAE λ=0.95 · horizon 100 steps (2.0s × 50Hz)</div>
+      <div class="grid2">
+        <ul class="t">
+          <li><b>S</b> <span class="sub">— 관절·몸통 상태 + 경과시간 비율 φ = t/T</span></li>
+          <li><b>A</b> <span class="sub">— q* = q_default + 0.5a (기본자세 오프셋 → 초기부터 안정)</span></li>
+          <li><b>P</b> <span class="sub">— PhysX + 도메인 랜덤화 조건부</span></li>
+          <li><b>R</b> <span class="sub">— 16항 가중합, 시간 창 마스크 (다음 장)</span></li>
+        </ul>
+        <div class="card">
+          <h3 class="orange">핵심 판단 두 가지</h3>
+          <p><b style="color:var(--ink)">① φ를 상태에 포함</b> — 시간 의존 보상이 상태의 함수 R(s,a)가 되어 Markov 성질 보존. LSTM 없이 MLP로 충분한 근거.<br><br>
+          <b style="color:var(--ink)">② 보상은 참값 상태로 계산</b> — 관측을 바꿔도(노이즈, 선속도 제거) 보상함수는 불변. 관측 재설계 때 보상 재설계가 필요 없던 이유.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5 에피소드 -->
+  <section class="slide">
+    <div class="inner">
+      <div class="eyebrow">04 · EPISODE</div>
+      <h2>2초짜리 각본 — 실측으로 검증된 시간 창</h2>
+      <div class="tl">
+        <div class="p1">준비 · 웅크림</div>
+        <div class="p2">도약</div>
+        <div class="p3">회전</div>
+        <div class="p4">착지 · 자세 회복</div>
+      </div>
+      <div class="tlr"><span>0.0s</span><span style="text-align:center">0.5s</span><span style="text-align:center">0.75 / 1.0s</span><span style="text-align:right">2.0s</span></div>
+      <div class="tblwrap" style="margin-top:1.6rem">
+        <table>
+          <tr><th>프레임 실측 (capture.py, 50Hz)</th><th class="mono">값</th><th>설계 창 대비</th></tr>
+          <tr><td>최대 상승속도</td><td class="mono">2.9 m/s @ 0.60s</td><td>도약 창 [0.5, 0.75) 내부 ✓</td></tr>
+          <tr><td>체공 구간</td><td class="mono">0.62–1.12s</td><td>회전 창 [0.5, 1.0) 정합 ✓</td></tr>
+          <tr><td>웅크림 깊이</td><td class="mono">0.08 m</td><td>배가 지면에 닿기 직전까지 압축</td></tr>
+          <tr><td>피크 회전 각속도</td><td class="mono">−12.3 rad/s</td><td>0.5초 체공 내 360° 완주 가능</td></tr>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6 보상 -->
+  <section class="slide">
+    <div class="inner">
+      <div class="eyebrow">05 · REWARD</div>
+      <h2>보상함수 — R = Σ wᵢ·rᵢ, 16항</h2>
+      <div class="tblwrap">
+        <table>
+          <tr><th>항</th><th class="mono">수식</th><th class="mono">w</th><th>역할</th></tr>
+          <tr class="grp"><td colspan="4">TASK — 하게 만드는 힘</td></tr>
+          <tr><td class="mono">r_up</td><td class="mono">clip(v_z,0,3)·𝟙[Φ_up]</td><td class="mono">+20</td><td>도약 임펄스</td></tr>
+          <tr><td class="mono">r_flip</td><td class="mono">clip(−ω_y,0,ω_max)·𝟙[Φ_flip]</td><td class="mono">+5</td><td>후방 회전 (ω_max: 커리큘럼 변수 3.6→7.2)</td></tr>
+          <tr><td class="mono">r_land</td><td class="mono">𝟙[네발∧수평∧회전완료]·𝟙[Φ_land]</td><td class="mono">+10</td><td>착지 성공 보너스</td></tr>
+          <tr class="grp"><td colspan="4">SHAPE — 자세를 빚는 힘</td></tr>
+          <tr><td class="mono">r_ori</td><td class="mono">−‖θ − θ_ref(φ)‖²</td><td class="mono">−1</td><td>피치 램프(0→−2π) 추종</td></tr>
+          <tr><td class="mono">r_height · r_roll · r_yaw</td><td class="mono">−|h−0.3| · −|g_y| · −ω_z²</td><td class="mono">−10/−10/−1</td><td>높이·좌우기울기·요 억제</td></tr>
+          <tr><td class="mono">r_feet_pre · r_sym · r_feet_dist</td><td class="mono">발들림 · 좌우비대칭 · 스탠스</td><td class="mono">−30/−0.1/−1</td><td>조기점프 방지·대칭 강제</td></tr>
+          <tr class="grp"><td colspan="4">QUALITY — 배포 품질 (Stage 4~5)</td></tr>
+          <tr><td class="mono">r_torque · r_acc · r_rate · r_limit · r_contact</td><td class="mono">토크²·가속²·행동변화·한계·접촉</td><td class="mono">미세</td><td>매끄럽고 안전한 모터 명령</td></tr>
+          <tr><td class="mono orange">r_drift</td><td class="mono">−‖p_xy − p₀‖²·𝟙[Φ_land]</td><td class="mono">−5</td><td>제자리 착지 (Stage 5)</td></tr>
+          <tr><td class="mono orange">r_impact</td><td class="mono">−Σ clip(F_feet−300N, 0)</td><td class="mono">−0.005</td><td>연착지 — 충격 흡수 (Stage 5)</td></tr>
+        </table>
+      </div>
+      <p style="margin-top:0.8rem; font-size:0.83rem; color:var(--ink-soft)">가중치 기반: Go2 실기 백플립 실증 사례(Genesis-backflip) · 전 항목 학습 중 실시간 변경 가능</p>
+    </div>
+  </section>
+
+  <!-- 7 커리큘럼 -->
+  <section class="slide">
+    <div class="inner">
+      <div class="eyebrow">06 · CURRICULUM</div>
+      <h2>다섯 단계, 세 번의 조기 졸업</h2>
+      <div class="grid5">
+        <div class="card"><div class="no">S1</div><h3>수직 점프</h3><p>회전 없이 도약-착지만.</p><div class="res orange">494 iter 승급<br>(예정의 49%)</div></div>
+        <div class="card"><div class="no">S2</div><h3>후방 180°</h3><p>등 착지 허용, ω 3.6.</p><div class="res orange">−3.13 rad<br>오차 0.2%</div></div>
+        <div class="card"><div class="no">S3</div><h3>풀 백플립</h3><p>ω 7.2, 목표 2π, 발 착지.</p><div class="res orange">−6.28 rad<br>= 359.96°</div></div>
+        <div class="card"><div class="no">S4</div><h3>강건화</h3><p>도메인 랜덤화 + 토크 억제.</p><div class="res">DR 하에서도<br>360° 유지</div></div>
+        <div class="card"><div class="no">S5</div><h3>정밀·연착지</h3><p>제자리 + 충격 흡수.</p><div class="res">충격 3.2→<b class="orange">2.1×</b><br>오차 0.88→<b class="orange">0.39m</b></div></div>
+      </div>
+      <ul class="t" style="margin-top:1.5rem">
+        <li><b>Warm-start</b> <span class="sub">— 정책+Adam 상태를 통째로 이어받고, 보상 가중치와 커리큘럼 변수만 전환</span></li>
+        <li><b>조기 승급</b> <span class="sub">— 실측 물리량(자이로 적분 회전각)이 기준을 3회 연속 충족하면 즉시 다음 단계. 보상 점수가 아닌 실측 기준 — 보상 스케일을 바꿔도 판정 불변</span></li>
+        <li><b>점프 보상은 전 단계 유지</b> <span class="sub">— 승급은 "수업 추가"지 "수업 종료"가 아님</span></li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- 8 트레이드오프 -->
+  <section class="slide">
+    <div class="inner">
+      <div class="eyebrow">07 · FINDING</div>
+      <h2>실측이 가르쳐준 것 — 제자리와 연착지는 흥정 관계</h2>
+      <p class="lede">drift 가중치를 3배로 올린 연장 실험: 위치는 6cm 좋아졌지만 정책이 "다리 급제동"을 선택하며 충격이 되돌아왔다.</p>
+      <div class="vs">
+        <div class="side"><h3>STAGE 4 (기준)</h3><div class="big">0.88 m · 477 N</div><p>착지 위치·충격 모두 미관리</p></div>
+        <div class="side win"><h3>STAGE 5 ✓ 최종 채택</h3><div class="big orange">0.39 m · 306 N</div><p>둘 다 잡은 파레토 최적점 · 착지토크 포화 해소(23.0→21.1)</p></div>
+        <div class="side"><h3>DRIFT ×3 연장 (폐기)</h3><div class="big">0.33 m · 452 N</div><p>6cm 얻고 충격 146N 손해 — 나쁜 거래</p></div>
+      </div>
+      <ul class="t" style="margin-top:1.4rem">
+        <li><b>하드 제약이 필요하면 CMDP</b> <span class="sub">— 페널티는 흥정이 가능하므로, "절대 한계"는 Constraints-as-Terminations(충격 700N 초과 시 에피소드 종료·미래 보상 몰수)로 구현해 둠. 충격이 이미 한계 절반 이하라 현재는 미투입</span></li>
+        <li><b>충격값의 성격</b> <span class="sub">— PhysX 접촉 솔버의 역학 계산값. 강체 근사라 실물보다 보수적(높게) 측정되며, 절대값보다 정책 간 비교에 사용</span></li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- 9 결과 -->
+  <section class="slide">
+    <div class="inner">
+      <div class="eyebrow">08 · RESULT</div>
+      <h2>최종 기록</h2>
+      <div class="stat-row" style="margin-top:0.5rem">
+        <div class="stat"><div class="num">−6.45 rad</div><div class="lbl">회전각 (360°+α)</div></div>
+        <div class="stat"><div class="num">306 N</div><div class="lbl">착지 충격 (체중 2.1×)</div></div>
+        <div class="stat"><div class="num">0.39 m</div><div class="lbl">착지 위치 오차</div></div>
+        <div class="stat"><div class="num">~11억</div><div class="lbl">총 학습 스텝 (1 GPU · 1일)</div></div>
+      </div>
+      <h3 style="margin-top:1.8rem">검증된 설계 원칙</h3>
+      <ul class="t">
+        <li><b>Reference-free로 충분</b> <span class="sub">— 모션 데이터 없이 시간 창 보상만으로 회전 오차 0.1%</span></li>
+        <li><b>측정 → 설계 → 재측정 루프</b> <span class="sub">— 프레임 실측이 보상 시간 창을 검증하고, 트레이드오프를 발견하고, 최종 정책을 선택함</span></li>
+        <li><b>MLP + phase &gt; LSTM</b> <span class="sub">— 완전관측화가 순환 신경망을 불필요하게 만듦</span></li>
+        <li><b>sim2real 4중 방어</b> <span class="sub">— 관측노이즈 · 행동지연 0~10ms · 모터오프셋 · DR, 배포 가능 관측만 사용</span></li>
+      </ul>
+      <p style="margin-top:1.5rem; font-family:var(--mono); font-size:0.78rem; color:var(--ink-soft)">NEXT → 실기 Go2 배포(ONNX 내보내기 완료) · 명령 조건부 멀티스킬 · 내비게이션 결합 파쿠르</p>
+    </div>
+  </section>
+
+</div>
+
+<div class="tag">GO2 BACKFLIP · FLIGHT TEST RECORD</div>
+<div class="nav">
+  <button id="prev" aria-label="이전">←</button>
+  <span id="counter">1 / 9</span>
+  <button id="next" aria-label="다음">→</button>
+</div>
+
+<script>
+  const slides = Array.from(document.querySelectorAll('.slide'));
+  let idx = 0;
+  function show(i) {
+    idx = Math.max(0, Math.min(slides.length - 1, i));
+    slides.forEach((s, j) => s.classList.toggle('active', j === idx));
+    document.getElementById('counter').textContent = (idx + 1) + ' / ' + slides.length;
+    document.getElementById('progress').style.width = ((idx + 1) / slides.length * 100) + '%';
+  }
+  document.getElementById('prev').addEventListener('click', () => show(idx - 1));
+  document.getElementById('next').addEventListener('click', () => show(idx + 1));
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') show(idx + 1);
+    if (e.key === 'ArrowLeft' || e.key === 'PageUp') show(idx - 1);
+    if (e.key === 'Home') show(0);
+    if (e.key === 'End') show(slides.length - 1);
+  });
+  show(0);
+</script>
+</body>
+</html>

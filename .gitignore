@@ -1,0 +1,16 @@
+# training artifacts
+logs/
+outputs/
+capture*.csv
+*.npz
+
+# environments / external
+.venv-mj/
+mujoco_menagerie/
+
+# python
+__pycache__/
+*.pyc
+*.egg-info/
+build/
+dist/
