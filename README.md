@@ -4,7 +4,11 @@
 참조 모션 없이(reference-free) 보상 설계와 커리큘럼만으로 학습하고, Isaac Sim → MuJoCo → (실기) 파이프라인으로 검증합니다.
 
 <p align="center">
-  <a href="media/go2_backflip_연착지_최종.mp4">🎬 최종 결과 영상 보기</a> ·
+  <img src="media/preview.gif" alt="Go2 백플립 — 4마리 동시 시연 (최종 정책)" width="640">
+</p>
+
+<p align="center">
+  <a href="media/go2_backflip_연착지_최종.mp4">🎬 원본 영상(mp4)</a> ·
   <a href="docs/go2_backflip_발표자료_v2.html">📊 발표자료</a>
 </p>
 
